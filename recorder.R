@@ -50,7 +50,18 @@ recorderUI <- function(id){
   )
 }
 
+
+person.name <<- "name"
+category.name <<- "nocat"
+
+
 recorder <- function(input, output, session) {
+  
+
+observe({
+  person.name <<- input$name
+category.name <<- input$category})
+  
   api_url <- session$registerDataObj( 
     name   = 'api', # an arbitrary but unique name for the data object
     data   = list(), # you can bind some data here, which is the data argument for the
@@ -66,12 +77,19 @@ recorder <- function(input, output, session) {
         # read a chuck of size 2^16 bytes, should suffice for our test
         buf <- reqInput$read()
         # print(length(buf))
-        saveBuffer(buf,input$name,input$category)
+       #saveBuffer(buf,input$name,input$category)
+
+       # observeEvent(input$name, {saveBuffer(buf,input$name,input$category)})
+       
+        saveBuffer(buf,person.name,category.name)
+        
         # simply dump the HTTP request (input) stream back to client
         shiny:::httpResponse(
           200, 'text/plain', buf
         )
-      }          
+      }
+      
+      
     }
   )
   
@@ -86,7 +104,6 @@ recorder <- function(input, output, session) {
   
   
   session$sendCustomMessage("api_url", list(url=api_url))
-  
   return(words)
   
 }
@@ -98,16 +115,18 @@ saveBuffer <- function(buffer,name, category){
   kaldiPath <-paste0("~/kaldi/egs/", category, "/audio/", "test/")
   folderName <- paste0(name,"_test")
   dir.create(file.path(kaldiPath, folderName), showWarnings = FALSE)
-  final.path <- paste0(kaldiPath,folderName)
+  final.path <- paste0(kaldiPath,folderName,"/")
   # setwd(final.path)
   number.of.files <- length(list.files(path = final.path))
+  #number.of.files <- 3
+  
   raw.file.name <- paste0(final.path,"rawtest",number.of.files,".wav" )
   out.file <- file( raw.file.name , "wb" )
   writeBin(buffer,out.file, useBytes = TRUE)
   close(out.file)
-  
- # system(paste0("ffmpeg -i ",raw.file.name ," -ar 16000 ",paste0(final.path,"test",number.of.files,".wav" ) ), ignore.stdout = TRUE, ignore.stderr = TRUE)
 
+ system(paste0("ffmpeg -i ",raw.file.name ," -ar 16000 ",paste0(final.path,"test",number.of.files,".wav" ) ), ignore.stdout = TRUE, ignore.stderr = TRUE)
+system(paste0("rm ", raw.file.name))
 
 }
 
