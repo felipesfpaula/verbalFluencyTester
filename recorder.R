@@ -28,6 +28,12 @@ recorderUI <- function(id){
 " ))),
     
     h2("Verbal fluency"),
+    textInput(ns("name"), "Patient Name", "name"),
+    selectInput(ns("category"), "Test category", 
+                choices = c("animal", "supermarket-product", "verb")),
+    selectInput(ns("gender"), "Recorder gender option", 
+                choices = c("female", "male")),
+    
     actionButton(ns("getwords"), "GET WORDS"),
     textOutput(ns("testResult")),
   tags$body(tags$input(type = "button", 
@@ -58,11 +64,9 @@ recorder <- function(input, output, session) {
         reqInput <- req$rook.input
         
         # read a chuck of size 2^16 bytes, should suffice for our test
-        f <- file ( "recorded.wav", "wb")
         buf <- reqInput$read()
-        # print(length(buf)) 
-        writeBin(buf,f, useBytes = TRUE)
-        close(f)
+        # print(length(buf))
+        saveBuffer(buf,input$name,input$category)
         # simply dump the HTTP request (input) stream back to client
         shiny:::httpResponse(
           200, 'text/plain', buf
@@ -71,13 +75,13 @@ recorder <- function(input, output, session) {
     }
   )
   
-  output$testResult <- renderText({
-    paste("olaaaa", input$getwords)
-    
-  })
+  # output$testResult <- renderText({
+  #   paste("olaaaa", input$getwords)
+  #   
+  # })
   
   words <- eventReactive(input$getwords, {
-    return("ok")
+    return(c(input$name, input$category, input$gender))
   })
   
   
@@ -87,4 +91,23 @@ recorder <- function(input, output, session) {
   
 }
 
+
+
+saveBuffer <- function(buffer,name, category){
+  
+  kaldiPath <-paste0("~/kaldi/egs/", category, "/audio/", "test/")
+  folderName <- paste0(name,"_test")
+  dir.create(file.path(kaldiPath, folderName), showWarnings = FALSE)
+  final.path <- paste0(kaldiPath,folderName)
+  # setwd(final.path)
+  number.of.files <- length(list.files(path = final.path))
+  raw.file.name <- paste0(final.path,"rawtest",number.of.files,".wav" )
+  out.file <- file( raw.file.name , "wb" )
+  writeBin(buffer,out.file, useBytes = TRUE)
+  close(out.file)
+  
+ # system(paste0("ffmpeg -i ",raw.file.name ," -ar 16000 ",paste0(final.path,"test",number.of.files,".wav" ) ), ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+
+}
 
