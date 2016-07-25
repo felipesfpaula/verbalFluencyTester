@@ -17,7 +17,7 @@ function __log(e, data) {
     // Uncomment if you want the audio to feedback directly
     //input.connect(audio_context.destination);
     //__log('Input connected to audio context destination.');
-    
+
     recorder = new Recorder(input);
     //__log('Recorder initialised.');
   }
@@ -34,10 +34,10 @@ function __log(e, data) {
     button.disabled = true;
     button.previousElementSibling.disabled = false;
    // __log('Stopped recording.');
-    
+
     // create WAV download link using audio data blob
     createDownloadLink();
-    
+
     recorder.clear();
     recorder = new Recorder(input);
 
@@ -46,7 +46,7 @@ function __log(e, data) {
 
   function createDownloadLink() {
     recorder && recorder.exportWAV(function(blob) {
-    
+
     $.ajax({
         type: "POST",
         url: api_url,
@@ -55,12 +55,12 @@ function __log(e, data) {
         contentType: blob.type
 
     });
-      
+
       /*
       var li = document.createElement('li');
       var au = document.createElement('audio');
       var hf = document.createElement('a');
-      
+
       au.controls = true;
       au.src = url;
       hf.href = url;
@@ -77,9 +77,12 @@ function __log(e, data) {
     try {
       // webkit shim
       window.AudioContext = window.AudioContext || window.webkitAudioContext;
-      navigator.mozGetUserMedia = navigator.mozGetUserMedia || navigator.webkitmozGetUserMedia;
+  //    navigator.mozGetUserMedia = navigator.mozGetUserMedia || navigator.webkitmozGetUserMedia;
+      navigator.getUserMedia =  navigator.getUserMedia
+              ||navigator.webkitGetUserMedia
+              ||navigator.mozGetUserMedia;
       window.URL = window.URL || window.webkitURL;
-      
+
       audio_context = new AudioContext;
 
     //  __log('Audio context set up.');
@@ -88,8 +91,9 @@ function __log(e, data) {
       alert('No web audio support in this browser!');
     }
 
-    //MozmozGetUserMedia
-    navigator.mozGetUserMedia({audio: true}, startUserMedia, function(e) {
+    // MozmozGetUserMedia
+    // navigator.mozGetUserMedia({audio: true}, startUserMedia, function(e) {
+    navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
       //__log('No live audio input: ' + e);
     });
   };

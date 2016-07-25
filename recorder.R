@@ -53,6 +53,7 @@ recorderUI <- function(id){
 
 person.name <<- "name"
 category.name <<- "nocat"
+gender.name <<- "m"
 
 
 recorder <- function(input, output, session) {
@@ -60,7 +61,8 @@ recorder <- function(input, output, session) {
 
 observe({
   person.name <<- input$name
-category.name <<- input$category})
+category.name <<- input$category
+gender.name <<- input$gender})
   
   api_url <- session$registerDataObj( 
     name   = 'api', # an arbitrary but unique name for the data object
@@ -81,7 +83,7 @@ category.name <<- input$category})
 
        # observeEvent(input$name, {saveBuffer(buf,input$name,input$category)})
        
-        saveBuffer(buf,person.name,category.name)
+        saveBuffer(buf,person.name,category.name,gender.name)
         
         # simply dump the HTTP request (input) stream back to client
         shiny:::httpResponse(
@@ -110,12 +112,12 @@ category.name <<- input$category})
 
 
 
-saveBuffer <- function(buffer,name, category){
+saveBuffer <- function(buffer,name, category, gender){
   
-  kaldiPath <-paste0("~/kaldi/egs/", category, "/audio/", "test/")
-  folderName <- paste0(name,"_test")
-  dir.create(file.path(kaldiPath, folderName), showWarnings = FALSE)
-  final.path <- paste0(kaldiPath,folderName,"/")
+  kaldiPath <-paste0("~/verbalFluencyTester/kaldi/egs/", category, "/audio/", "test/")
+  #folderName <- paste0(name,"_test")
+  dir.create(file.path(kaldiPath, name), showWarnings = FALSE)
+  final.path <- paste0(kaldiPath, name,"/")
   # setwd(final.path)
   number.of.files <- length(list.files(path = final.path))
   #number.of.files <- 3
@@ -127,6 +129,12 @@ saveBuffer <- function(buffer,name, category){
 
  system(paste0("ffmpeg -i ",raw.file.name ," -ar 16000 ",paste0(final.path,"test",number.of.files,".wav" ) ), ignore.stdout = TRUE, ignore.stderr = TRUE)
 system(paste0("rm ", raw.file.name))
+ if(gender == "male"){
+   system(paste0("./process_info.sh ",category," ",name," m"))
+ }
+ else{
+   system(paste0("./process_info.sh ",category," ",name," f")) 
+ }
 
 }
 
